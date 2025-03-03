@@ -1,0 +1,40 @@
+name: Build GCC Toolchains
+
+on:
+  workflow_run:
+    workflows: ["Build and Publish to GHCR"]
+    types:
+      - completed
+
+  workflow_dispatch:
+
+jobs:
+  build-gcc-toolchains:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64]
+        compiler: [arm-cortex_a8-linux-gnueabihf]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+      - name: Run Container and Build GCC
+        run: |
+          docker run --rm -u $(id -u):$(id -g) -v $PWD:/home/ctuser/toolchain -v $PWD/output:/home/ctuser/x-tools ghcr.io/${{ github.repository }}:latest /bin/bash -c "
+            cp configs/${{ matrix.compiler }}.config .config &&
+            cat .config &&
+            ct-ng oldconfig &&
+            ct-ng build
+          "
+
+      - name: Upload Compiler Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gcc-${{ matrix.compiler }}-${{ matrix.arch }}
+          path: output/${{ matrix.compiler }}
+          retention-days: 7
+
