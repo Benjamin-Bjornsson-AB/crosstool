@@ -35,7 +35,7 @@ RUN apt-get install -y xz-utils
 
 RUN git clone https://github.com/crosstool-ng/crosstool-ng.git /opt/crosstool-ng
 WORKDIR /opt/crosstool-ng
-RUN git checkout crosstool-ng-1.27.0
+RUN git checkout crosstool-ng-1.26.0
 
 WORKDIR /opt/crosstool-ng
 RUN ./bootstrap
